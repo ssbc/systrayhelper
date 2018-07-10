@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -9,7 +8,6 @@ import (
 	"os"
 	"os/signal"
 	"reflect"
-	"strings"
 	"syscall"
 
 	"github.com/getlantern/systray"
@@ -48,24 +46,11 @@ type Action struct {
 	SeqID int    `json:"seq_id"`
 }
 
-func readLine(reader *bufio.Reader) io.Reader {
-	input, err := reader.ReadString('\n')
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-	}
-	if len(input) < 1 {
-		return strings.NewReader("")
-	}
-	return strings.NewReader(input[0 : len(input)-1])
-}
-
-func readAction(reader *bufio.Reader) Action {
-	var action Action
-	if err := json.NewDecoder(readLine(reader)).Decode(&action); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-	}
-	return action
-}
+// test stubbing
+var (
+	input  io.Reader = os.Stdin
+	output io.Writer = os.Stdout
+)
 
 func onReady() {
 	signalChannel := make(chan os.Signal, 2)
@@ -88,10 +73,11 @@ func onReady() {
 		items := make([]*systray.MenuItem, 0)
 		// fmt.Println(items)
 		fmt.Println(`{"type": "ready"}`)
-		reader := bufio.NewReader(os.Stdin)
-		// println(readLine(reader))
+
+		jsonDecoder := json.NewDecoder(input)
+
 		var menu Menu
-		err := json.NewDecoder(readLine(reader)).Decode(&menu)
+		err := jsonDecoder.Decode(&menu)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 		}
@@ -155,12 +141,18 @@ func onReady() {
 			}
 		}
 
-		go func(reader *bufio.Reader) {
+		go func() {
 			for {
-				action := readAction(reader)
+				var action Action
+				if err := jsonDecoder.Decode(&action); err != nil {
+					if err == io.EOF {
+						break
+					}
+					fmt.Fprint(os.Stderr, "action loop error:", err)
+				}
 				update(action)
 			}
-		}(reader)
+		}()
 
 		for i := 0; i < len(menu.Items); i++ {
 			item := menu.Items[i]
@@ -177,7 +169,7 @@ func onReady() {
 			}
 			items = append(items, menuItem)
 		}
-		stdoutEnc := json.NewEncoder(os.Stdout)
+		stdoutEnc := json.NewEncoder(output)
 		// {"type": "update-item", "item": {"Title":"aa3","Tooltip":"bb","Enabled":true,"Checked":true}, "seqID": 0}
 		for {
 			cases := make([]reflect.SelectCase, len(items))
