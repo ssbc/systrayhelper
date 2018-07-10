@@ -1,7 +1,7 @@
-# forked-systray
+# systrayhelper
 A portable version of [go systray](https://github.com/getlantern/systray), using json objects over stdio to communicate with other languages.
 
-Note(cryptix): keeping this as a common base for zaacks [upstream version](https://github.com/zaaack/systray-portable) but will use this commit as the base for a new repo to reduce its size.
+Note(cryptix): this is the cleanup fork of [forked-systray](https://github.com/ssbc/forked-systray) sorry for the mess..
 
 ## Protocol
 
@@ -52,7 +52,7 @@ main_xxx: `go build tray.go`
 
 ## Repo Init
 
-Had to start somewhere, so I took [99b200...]https://github.com/ssbc/forked-systray/commit/99b2002b2e34f6381a04f365907f2e9dcd8837ea from the previous repo.
+Had to start somewhere, so I took [99b200...](https://github.com/ssbc/forked-systray/commit/99b2002b2e34f6381a04f365907f2e9dcd8837ea) from the previous repo.
 
 
 ```bash
