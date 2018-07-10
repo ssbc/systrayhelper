@@ -1,4 +1,4 @@
-# systrayhelper
+# systrayhelper [![Build Status](https://travis-ci.org/ssbc/systrayhelper.svg?branch=master)](https://travis-ci.org/ssbc/systrayhelper)
 A portable version of [go systray](https://github.com/getlantern/systray), using json objects over stdio to communicate with other languages.
 
 Note(cryptix): this is the cleanup fork of [forked-systray](https://github.com/ssbc/forked-systray) sorry for the mess..
