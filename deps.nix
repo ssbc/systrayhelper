@@ -68,8 +68,8 @@
     fetch = {
       type = "git";
       url = "https://github.com/getlantern/systray";
-      rev = "a9db7e378b5cb5ac8a5585ccd9b2a0ea1b7e033e";
-      sha256 = "13hxlinpyj8yv4yd9kndbhck8rv7fqxdic34aswan6474svij93s";
+      rev = "62af9eb8030c168caa78856c967e6d2c4a7d813e";
+      sha256 = "0ix2h0visj0d0k4zvx2wxg1qjih229c6pnxlg25ihajd33izf1bc";
     };
   }
   {
