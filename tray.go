@@ -14,7 +14,14 @@ import (
 	"github.com/getlantern/systray"
 )
 
+var (
+	version = "v0.0.0-snapshot"
+	commit  = "unset"
+	date    = "unset"
+)
+
 func main() {
+	fmt.Fprintf(os.Stderr, "systrayhelper %s (%s built %s)\n", version, commit, date)
 	// Should be called at the very beginning of main().
 	systray.Run(onReady, onExit)
 }

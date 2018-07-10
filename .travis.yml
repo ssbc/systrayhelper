@@ -8,6 +8,7 @@ addons:
       - xvfb
       - libgtk-3-dev
       - libappindicator3-dev
+      - rpm
 
 language: go
 
@@ -30,5 +31,14 @@ go_import_path: github.com/ssbc/systrayhelper
 install: ./.travis.install.sh
 script: ./.travis.runtest.sh
 
-after_success:
-    - test -n "$TRAVIS_TAG" && bash .goreleaser.sh
+deploy:
+- provider: script
+  skip_cleanup: true
+  # maybe update curl -sL https://git.io/goreleaser > .goreleaser.sh
+  script: bash .goreleaser.sh
+  on:
+    tags: true
+    go: "1.10.x"
+
+
+# food for thought: complex example: https://github.com/tsuru/tsuru/blob/master/.travis.yml

@@ -23,6 +23,13 @@ download() {
     "$RELEASES_URL/download/$VERSION/goreleaser_$(uname -s)_$(uname -m).tar.gz"
 }
 
+# nasty but I don't want to deal with argument jugling $@
+if [[ $TRAVIS_OS_NAME == 'osx' ]]; then
+  ln -s ./.goreleaser.darwin.yml ./.goreleaser.yml
+elif [[ $TRAVIS_OS_NAME == 'linux' ]]; then
+  ln -s ./.goreleaser.winAndLinux.yml ./.goreleaser.yml
+fi
+
 if command -v goreleaser; then
   goreleaser "$@"
 else
@@ -30,4 +37,3 @@ else
   tar -xf "$TAR_FILE" -C "$TMPDIR"
   "${TMPDIR}/goreleaser" "$@"
 fi
-

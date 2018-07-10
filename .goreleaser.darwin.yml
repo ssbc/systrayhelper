@@ -1,0 +1,12 @@
+builds:
+  - binary: systrayhelper
+    env:
+      - CGO_ENABLED=1
+    goos:
+      - darwin
+    goarch:
+      - amd64
+checksum:
+  name_template: "checksums_osx.txt"
+
+# TODO: homebrew-tap generator https://goreleaser.com/homebrew/
