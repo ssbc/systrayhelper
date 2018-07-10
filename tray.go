@@ -9,6 +9,7 @@ import (
 	"os/signal"
 	"reflect"
 	"syscall"
+	"time"
 
 	"github.com/getlantern/systray"
 )
@@ -138,6 +139,12 @@ func onReady() {
 			case "update-item-and-menu":
 				updateItem(action)
 				updateMenu(action)
+			case "shutdown":
+				if action.SeqID == 999 { // testing magick - testuser could quit faster by clicking
+					fmt.Fprintf(os.Stderr, "shutodwn called, still waiting...")
+					time.Sleep(time.Second * 5)
+					systray.Quit()
+				}
 			}
 		}
 
