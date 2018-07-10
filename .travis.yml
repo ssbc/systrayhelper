@@ -13,7 +13,7 @@ language: go
 
 go:
   - "1.x"
-  - "1.9.x"
+  - "1.7.x"
   - "1.10.x"
   - master
 
@@ -24,5 +24,10 @@ matrix:
 go_import_path: github.com/ssbc/systrayhelper
 
 install:
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export DISPLAY=':99.0' && Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &; fi
-  - go get -t -v github.com/ssbc/systrayhelper/...
+  - ./.travis.install.sh
+
+script:
+  - ./.travis.runtest.sh
+
+after_success:
+    - test -n "$TRAVIS_TAG" && bash .gorelease.sh
