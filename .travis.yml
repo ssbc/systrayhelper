@@ -17,17 +17,18 @@ go:
   - "1.10.x"
   - master
 
+# passed two times except osx w/ go 1.7
+# https://travis-ci.org/ssbc/systrayhelper/builds/402264830
+# https://travis-ci.org/ssbc/systrayhelper/builds/402261541
 matrix:
   allow_failures:
     - go: master
+    - go: "1.7.x"
 
 go_import_path: github.com/ssbc/systrayhelper
 
-install:
-  - ./.travis.install.sh
-
-script:
-  - ./.travis.runtest.sh
+install: ./.travis.install.sh
+script: ./.travis.runtest.sh
 
 after_success:
-    - test -n "$TRAVIS_TAG" && bash .gorelease.sh
+    - test -n "$TRAVIS_TAG" && bash .goreleaser.sh
