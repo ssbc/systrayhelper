@@ -15,12 +15,18 @@ import (
 )
 
 var (
-	version = "v0.0.2-snapshot"
+	version = "v0.0.2"
 	commit  = "unset"
 	date    = "unset"
 )
 
 func main() {
+	if len(os.Args) != 1 {
+		fmt.Fprintf(os.Stderr, "usage: systrayhelper\n")
+		fmt.Fprintf(os.Stderr, "\tsend&receive json over stdio to create menu items, etc.\n\n")
+		fmt.Fprintf(os.Stderr, "Version %s (%s built %s)\n", version, commit, date)
+		os.Exit(0)
+	}
 	// Should be called at the very beginning of main().
 	systray.Run(onReady, onExit)
 }
