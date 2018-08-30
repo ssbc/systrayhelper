@@ -1,23 +1,31 @@
-{ stdenv, pkgconfig, gtk3, libappindicator-gtk3, buildGoPackage, fetchgit, fetchhg, fetchbzr, fetchsvn }:
+{ stdenv, pkgconfig, gtk3, libappindicator-gtk3, buildGoPackage, fetchFromGitHub }:
 
 buildGoPackage rec {
-  name = "systrayhelper-unstable-${version}";
-  version = "2018-07-10";
-  rev = "552edee02edda55d077425e17dc6f3036331a740";
+  name = "systrayhelper-${version}";
+  version = "0.0.1";
+  rev = "94ce96498bc55d5be01c8d5e51742eae54e41e79";
 
   goPackagePath = "github.com/ssbc/systrayhelper";
 
-  src = fetchgit {
+  src = fetchFromGitHub {
     inherit rev;
-    url = "https://github.com/ssbc/systrayhelper.git";
-    sha256 = "0609f7lbdgvfcsx8a7zg0idxhjja43jni5s7718gs5n23m3znrsz";
+    owner = "ssbc";
+    repo = "systrayhelper";
+    sha256 = "1kv9hq194b0zlzfd3k7274kgarbs9lijirqn0f441cmq3ssk8wgh";
   };
 
   goDeps = ./deps.nix;
 
-  nativeBuildInputs = [ pkgconfig gtk3 libappindicator-gtk3 ];
-  # https://blog.kiloreux.me/2018/05/24/learning-nix-by-example-building-ffmpeg-4-dot-0/
-  # o/ says not `buildInputs` are used by the code at run-time, so no
+  # -X main.date=${date +%F}?
+  buildFlagsArray = [ ''-ldflags=
+    -X main.version=v${version}
+    -X main.commit=${rev}
+    -s
+    -w
+  '' ];
+
+  nativeBuildInputs = [ pkgconfig gtk3 ];
+  buildInputs = [ libappindicator-gtk3 ];
 
   meta = with stdenv.lib; {
     description = "A portable version of go systray, using stdin/stdout to communicate with other language";
