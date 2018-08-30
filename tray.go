@@ -15,13 +15,12 @@ import (
 )
 
 var (
-	version = "v0.0.0-snapshot"
+	version = "v0.0.1"
 	commit  = "unset"
 	date    = "unset"
 )
 
 func main() {
-	fmt.Fprintf(os.Stderr, "systrayhelper %s (%s built %s)\n", version, commit, date)
 	// Should be called at the very beginning of main().
 	systray.Run(onReady, onExit)
 }
@@ -75,7 +74,7 @@ func onReady() {
 			}
 		}
 	}()
-
+	fmt.Fprintf(os.Stderr, "systrayhelper %s (%s built %s)\n", version, commit, date)
 	// We can manipulate the systray in other goroutines
 	go func() {
 		items := make([]*systray.MenuItem, 0)
