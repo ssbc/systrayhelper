@@ -3,67 +3,87 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:54d414482fb70eaccdd6e6fca023986b16ab3004e5b499b6bc3667d89574fc07"
   name = "github.com/getlantern/context"
   packages = ["."]
+  pruneopts = "UT"
   revision = "624d99b1798d7c5375ea1d3ca4c5b04d58f7c775"
 
 [[projects]]
   branch = "master"
+  digest = "1:56460acc7affba18fa344130886a6f841988d1368a051759d2e0c03ef6255f54"
   name = "github.com/getlantern/errors"
   packages = ["."]
-  revision = "e9c0296368b736086adb20832549567064224854"
+  pruneopts = "UT"
+  revision = "e24b7f4ff7c70be59bbefca6b7695d68cda8b399"
 
 [[projects]]
   branch = "master"
-  name = "github.com/getlantern/filepersist"
-  packages = ["."]
-  revision = "c5f0cd24e7991579ba6f5f1bd20a1ad2c9f06cd4"
-
-[[projects]]
-  branch = "master"
+  digest = "1:128515bf48085482f3b1269701a0be1b119087447d8f666a27211bdacf0b5dc9"
   name = "github.com/getlantern/golog"
   packages = ["."]
+  pruneopts = "UT"
   revision = "cca714f7feb5df8e455f409b549d384441ac4578"
 
 [[projects]]
   branch = "master"
+  digest = "1:f12c7103ba4c446c6822f331ada3e5f0c3626be111a115e92700cd2724bca9ed"
   name = "github.com/getlantern/hex"
   packages = ["."]
+  pruneopts = "UT"
   revision = "083fba3033ad473db3dd31c9bb368473d37581a7"
 
 [[projects]]
   branch = "master"
+  digest = "1:916634881c70eb3c2201419786896254d601a786a9124e662a079d4649df160d"
   name = "github.com/getlantern/hidden"
   packages = ["."]
+  pruneopts = "UT"
   revision = "d52a649ab33af200943bb599898dbdcfdbc94cb7"
 
 [[projects]]
   branch = "master"
+  digest = "1:f84e2692edf40301ae0ce718695cde032f5c6964e4fad812749eb1eaefa95785"
   name = "github.com/getlantern/ops"
   packages = ["."]
+  pruneopts = "UT"
   revision = "37353306c90844c8e0591956f56611f46299d202"
 
 [[projects]]
-  name = "github.com/getlantern/stack"
-  packages = ["."]
-  revision = "02f928aad224fbccd50d66edd776fc9d1e9f2f2b"
-  version = "1.5.1"
-
-[[projects]]
   branch = "master"
+  digest = "1:6a5bead5d6b5b244a7e9120bb08c92c6e9a1b7a631df3663010c674eb96546cd"
   name = "github.com/getlantern/systray"
   packages = ["."]
-  revision = "62af9eb8030c168caa78856c967e6d2c4a7d813e"
+  pruneopts = "UT"
+  revision = "3fd1443dac5c8297999189fe28d5836b2b075b66"
+
+[[projects]]
+  digest = "1:586ea76dbd0374d6fb649a91d70d652b7fe0ccffb8910a77468e7702e7901f3d"
+  name = "github.com/go-stack/stack"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "2fee6af1a9795aafbe0253a0cfbdf668e1fb8a9a"
+  version = "v1.8.0"
 
 [[projects]]
   branch = "master"
+  digest = "1:df63a8ddf6fd32f2cdf09db1ada151c8a27f5fe2516ee977b72d6a0707e94910"
   name = "github.com/oxtoacart/bpool"
   packages = ["."]
+  pruneopts = "UT"
   revision = "4e1c5567d7c2dd59fa4c7c83d34c2f3528b025d6"
+
+[[projects]]
+  branch = "master"
+  digest = "1:0e22b636435114add60ec3317a54eb909cea4acf2eef1ddd1d11225eac06acd4"
+  name = "golang.org/x/sys"
+  packages = ["windows"]
+  pruneopts = "UT"
+  revision = "d99a578cf41bfccdeaf48b0845c823a4b8b0ad5e"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "f46ed046e4b1b7b334376f152eff552d32c88d6d70ff00d7f7d375c4df08fe46"
+  input-imports = ["github.com/getlantern/systray"]
   solver-name = "gps-cdcl"
   solver-version = 1
