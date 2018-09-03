@@ -1,11 +1,27 @@
 # systrayhelper [![Build Status](https://travis-ci.org/ssbc/systrayhelper.svg?branch=master)](https://travis-ci.org/ssbc/systrayhelper)
 A portable version of [go systray](https://github.com/getlantern/systray), using json objects over stdio to communicate with other languages.
 
-Note(cryptix): this is the cleanup fork of [forked-systray](https://github.com/ssbc/forked-systray) sorry for the mess..
+Note(cryptix): this is the cleanup fork of [forked-systrayhelper](https://github.com/ssbc/forked-systrayhelper) sorry for the mess..
+
+## Installation
+
+Install [Go](https://golang.org) and run `go get -v github.com/ssbc/systrayhelper`. The binary will be in `$PATH/go/bin` by default.
+
+Or clone this repo and build it:
+
+```bash
+git clone https://github.com/ssbc/systrayhelper
+cd systrayhelper
+go build
+./systrayhelper --test
+```
+
+**Linux**: As noted on the [getlantern/systray repo](https://github.com/getlantern/systray#linux), you need to install these two packages: `libgtk-3-dev` and `libappindicator3-dev`
+
+On windows and darwin it should built just fine.
+
 
 ## Protocol
-
-Each line is a json string.
 
 tray binary =>  
 => ready  `{"type": "ready"}`  
@@ -44,11 +60,6 @@ tray binary =>
   "seq_id": 0
 }
 ```
-
-## Binary
-main_xxx_release: `go build -ldflags "-s -w" tray.go`  
-main_xxx: `go build tray.go`
-
 
 ## Repo Init
 
