@@ -73,7 +73,7 @@ func onReady() {
 			switch sig {
 			case os.Interrupt, syscall.SIGTERM:
 				//handle SIGINT, SIGTERM
-				fmt.Println("Quit")
+				fmt.Fprintf(os.Stderr, "%s: exiting", os.Args[0])
 				systray.Quit()
 			default:
 				fmt.Println("Unhandled signal:", sig)
