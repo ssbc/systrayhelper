@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/getlantern/systray"
+	"github.com/pkg/errors"
 )
 
 var (
@@ -92,11 +93,13 @@ func onReady() {
 		var menu Menu
 		err := jsonDecoder.Decode(&menu)
 		if err != nil {
+			err = errors.Wrap(err, "failed to decode initial menu config")
 			fmt.Fprintln(os.Stderr, err)
 		}
 		// fmt.Println("menu", menu)
 		icon, err := base64.StdEncoding.DecodeString(menu.Icon)
 		if err != nil {
+			err = errors.Wrap(err, "failed to decode initial b64 menu icon")
 			fmt.Fprintln(os.Stderr, err)
 		}
 		systray.SetIcon(icon)
@@ -132,6 +135,7 @@ func onReady() {
 				menu.Icon = m.Icon
 				icon, err := base64.StdEncoding.DecodeString(menu.Icon)
 				if err != nil {
+					err = errors.Wrap(err, "failed to decode b64 menu icon string")
 					fmt.Fprintln(os.Stderr, err)
 				}
 				systray.SetIcon(icon)
@@ -167,6 +171,7 @@ func onReady() {
 					if err == io.EOF {
 						break
 					}
+					err = errors.Wrap(err, "failed to decode action")
 					fmt.Fprint(os.Stderr, "action loop error:", err)
 				}
 				update(action)
@@ -212,6 +217,7 @@ func onReady() {
 					SeqID: chosen,
 				})
 				if err != nil {
+					err = errors.Wrap(err, "failed to encode clicked action")
 					fmt.Fprintln(os.Stderr, err)
 				}
 			}
