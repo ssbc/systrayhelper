@@ -64,15 +64,30 @@
 }
 
 - (void)setIcon:(NSImage *)image {
-  [statusItem setImage:image];
+  statusItem.button.image = image;
+  [self updateTitleButtonStyle];
 }
 
 - (void)setTitle:(NSString *)title {
-  [statusItem setTitle:title];
+  statusItem.button.title = title;
+  [self updateTitleButtonStyle];
 }
 
+-(void)updateTitleButtonStyle {
+  if (statusItem.button.image != nil) {
+    if ([statusItem.button.title length] == 0) {
+      statusItem.button.imagePosition = NSImageOnly;
+    } else {
+      statusItem.button.imagePosition = NSImageLeft;
+    }
+  } else {
+    statusItem.button.imagePosition = NSNoImage;
+  }
+}
+
+
 - (void)setTooltip:(NSString *)tooltip {
-  [statusItem setToolTip:tooltip];
+  statusItem.button.toolTip = tooltip;
 }
 
 - (IBAction)menuHandler:(id)sender
@@ -97,14 +112,14 @@
   }
   [menuItem setToolTip:item->tooltip];
   if (item->disabled == 1) {
-    [menuItem setEnabled:FALSE];
+    menuItem.enabled = FALSE;
   } else {
-    [menuItem setEnabled:TRUE];
+    menuItem.enabled = TRUE;
   }
   if (item->checked == 1) {
-    [menuItem setState:NSOnState];
+    menuItem.state = NSControlStateValueOn;
   } else {
-    [menuItem setState:NSOffState];
+    menuItem.state = NSControlStateValueOff;
   }
 }
 
@@ -122,6 +137,19 @@
   }
   menuItem = [menu itemAtIndex: existedMenuIndex];
   [menuItem setHidden:TRUE];
+}
+
+- (void)setMenuItemIcon:(NSArray*)imageAndMenuId {
+  NSImage* image = [imageAndMenuId objectAtIndex:0];
+  NSNumber* menuId = [imageAndMenuId objectAtIndex:1];
+
+  NSMenuItem* menuItem;
+  int existedMenuIndex = [menu indexOfItemWithRepresentedObject: menuId];
+  if (existedMenuIndex == -1) {
+    return;
+  }
+  menuItem = [menu itemAtIndex: existedMenuIndex];
+  menuItem.image = image;
 }
 
 - (void) show_menu_item:(NSNumber*) menuId
@@ -161,6 +189,15 @@ void setIcon(const char* iconBytes, int length) {
   NSImage *image = [[NSImage alloc] initWithData:buffer];
   [image setSize:NSMakeSize(16, 16)];
   runInMainThread(@selector(setIcon:), (id)image);
+}
+
+void setMenuItemIcon(const char* iconBytes, int length, int menuId) {
+  NSData* buffer = [NSData dataWithBytes: iconBytes length:length];
+  NSImage *image = [[NSImage alloc] initWithData:buffer];
+  [image setSize:NSMakeSize(16, 16)];
+
+  NSNumber *mId = [NSNumber numberWithInt:menuId];
+  runInMainThread(@selector(setMenuItemIcon:), @[image, (id)mId]);
 }
 
 void setTitle(char* ctitle) {

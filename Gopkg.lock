@@ -51,11 +51,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:6a5bead5d6b5b244a7e9120bb08c92c6e9a1b7a631df3663010c674eb96546cd"
+  digest = "1:9ea828b0087cf226e4589379359e114214dc218022bb4e96fe529e05531bfa35"
   name = "github.com/getlantern/systray"
   packages = ["."]
   pruneopts = "UT"
-  revision = "3fd1443dac5c8297999189fe28d5836b2b075b66"
+  revision = "e31397f8c6928d98a8a9a7e80087aebcf0090beb"
 
 [[projects]]
   digest = "1:586ea76dbd0374d6fb649a91d70d652b7fe0ccffb8910a77468e7702e7901f3d"
@@ -83,11 +83,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:0e22b636435114add60ec3317a54eb909cea4acf2eef1ddd1d11225eac06acd4"
+  digest = "1:68a4638398cf8c864a6aa50c8853ebe7935f939aa3acf7e44cb35b67852e9fef"
   name = "golang.org/x/sys"
   packages = ["windows"]
   pruneopts = "UT"
-  revision = "d99a578cf41bfccdeaf48b0845c823a4b8b0ad5e"
+  revision = "8e24a49d80f82323e1c4db1b5da3e0f31171a151"
 
 [solve-meta]
   analyzer-name = "dep"
