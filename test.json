@@ -10,12 +10,22 @@
             "enabled": false
         },
         {
-            "title": "Quit",
+            "title": "Not yet quit",
             "tooltip": "q",
             "checked": false,
             "enabled": true
         }
     ]
+}
+{
+    "type": "update-item",
+    "seq_id": 1,
+    "item": {
+        "title": "Quit",
+        "tooltip": "q",
+        "checked": false,
+        "enabled": true
+    }
 }
 {
     "type": "shutdown",

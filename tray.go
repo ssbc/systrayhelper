@@ -74,7 +74,7 @@ func onReady() {
 			switch sig {
 			case os.Interrupt, syscall.SIGTERM:
 				//handle SIGINT, SIGTERM
-				fmt.Fprintf(os.Stderr, "%s: exiting", os.Args[0])
+				fmt.Fprintf(os.Stderr, "%s: exiting\n", os.Args[0])
 				systray.Quit()
 			default:
 				fmt.Println("Unhandled signal:", sig)
@@ -84,15 +84,20 @@ func onReady() {
 	fmt.Fprintf(os.Stderr, "systrayhelper %s (%s built %s)\n", version, commit, date)
 	// We can manipulate the systray in other goroutines
 	go func() {
-		items := make([]*systray.MenuItem, 0)
-		// fmt.Println(items)
+		var items []*systray.MenuItem
+
 		fmt.Println(`{"type": "ready"}`)
 
-		jsonDecoder := json.NewDecoder(input)
+		stdinDec := json.NewDecoder(input) // debug: io.TeeReader(input, os.Stderr))
+		stdoutEnc := json.NewEncoder(output)
 
 		var menu Menu
-		err := jsonDecoder.Decode(&menu)
+		err := stdinDec.Decode(&menu)
 		if err != nil {
+			if err == io.EOF {
+				systray.Quit()
+				return
+			}
 			err = errors.Wrap(err, "failed to decode initial menu config")
 			fmt.Fprintln(os.Stderr, err)
 		}
@@ -106,10 +111,14 @@ func onReady() {
 		systray.SetTitle(menu.Title)
 		systray.SetTooltip(menu.Tooltip)
 
-		updateItem := func(action Action) {
-			item := action.Item
-			menuItem := items[action.SeqID]
-			menu.Items[action.SeqID] = item
+		updateItem := func(a Action) {
+			if a.SeqID >= len(items) {
+				// todo: extend
+				fmt.Fprintf(os.Stderr, "update-item warning!\nSeqID too large. has:%d want:%d\n", len(items), a.SeqID)
+				return
+			}
+			item := a.Item
+			menuItem := items[a.SeqID]
 			if item.Checked {
 				menuItem.Check()
 			} else {
@@ -122,8 +131,6 @@ func onReady() {
 			}
 			menuItem.SetTitle(item.Title)
 			menuItem.SetTooltip(item.Tooltip)
-			// fmt.Println("Done")
-			// fmt.Printf("Read from channel %#v and received %s\n", items[chosen], value.String())
 		}
 		updateMenu := func(action Action) {
 			m := action.Menu
@@ -167,8 +174,9 @@ func onReady() {
 		go func() {
 			for {
 				var action Action
-				if err := jsonDecoder.Decode(&action); err != nil {
+				if err := stdinDec.Decode(&action); err != nil {
 					if err == io.EOF {
+						fmt.Fprint(os.Stderr, "trayhelper warning: input decoder loop exited with EOF\n")
 						break
 					}
 					err = errors.Wrap(err, "failed to decode action")
@@ -193,9 +201,15 @@ func onReady() {
 			}
 			items = append(items, menuItem)
 		}
-		stdoutEnc := json.NewEncoder(output)
+
 		// {"type": "update-item", "item": {"Title":"aa3","Tooltip":"bb","Enabled":true,"Checked":true}, "seqID": 0}
 		for {
+			/* this builds a dynamic chan select
+			select {
+				// for item := range items
+				case chosen <- item[i]
+			}
+			*/
 			cases := make([]reflect.SelectCase, len(items))
 			for i, ch := range items {
 				cases[i] = reflect.SelectCase{Dir: reflect.SelectRecv, Chan: reflect.ValueOf(ch.ClickedCh)}
