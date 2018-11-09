@@ -27,7 +27,3 @@
         "enabled": true
     }
 }
-{
-    "type": "shutdown",
-    "seq_id": 999
-}
