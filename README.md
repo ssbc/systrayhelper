@@ -20,6 +20,12 @@ go build
 
 On windows and darwin it should built just fine.
 
+## Testing
+
+The testsuite in the `test/` folder uses [xvfb](https://en.wikipedia.org/wiki/Xvfb) to run the [i3](https://i3wm.org/) window manager and use [xdotool](https://www.semicomplete.com/projects/xdotool/) to run interactive tests against the helper. If it interferes with your X setup, you can also try this, which is what runs on travis:
+```bash
+xvfb-run -s '-screen 0 800x600x16' dbus-run-session go test -v ./...
+```
 
 ## Protocol
 
