@@ -3,9 +3,10 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
-	"strings"
+	"runtime/debug"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -14,9 +15,6 @@ import (
 func TestClicking(t *testing.T) {
 	var err error
 	r := require.New(t)
-
-	_, err = os.Stat("/tmp/.X23-lock")
-	r.True(os.IsNotExist(err), "X lock file still present")
 
 	var neededTools = []string{
 		"Xvfb",         // virtual X11 server
@@ -34,6 +32,7 @@ func TestClicking(t *testing.T) {
 	err = xvfb.Start()
 	r.NoError(err, "failed to start virtual X framebuffer")
 	fmt.Println("xvfb started. PID:", xvfb.Process.Pid)
+	defer halt(xvfb)
 
 	i3 := exec.Command("i3")
 	i3.Stdout = os.Stderr
@@ -42,12 +41,16 @@ func TestClicking(t *testing.T) {
 	err = i3.Start()
 	r.NoError(err, "failed to start i3 (for its tray area)")
 	fmt.Println("i3 started. PID:", i3.Process.Pid)
+	defer halt(i3)
 
 	th := exec.Command("systrayhelper")
 	th.Stderr = os.Stderr
 	th.Env = append(os.Environ(), "DISPLAY=:23")
 
-	th.Stdin = strings.NewReader("{}")
+	testJson, err := os.Open("../test.json")
+	r.NoError(err)
+	th.Stdin = testJson
+	defer testJson.Close()
 
 	stdout, err := th.StdoutPipe()
 	r.NoError(err)
@@ -55,13 +58,18 @@ func TestClicking(t *testing.T) {
 	err = th.Start()
 	r.NoError(err, "failed to start the actual helper")
 	fmt.Println("helper started. PID:", th.Process.Pid)
+	defer halt(th)
 
 	go func() {
 		dec := json.NewDecoder(stdout)
 		for {
 			var v map[string]interface{}
 			err = dec.Decode(&v)
-			r.NoError(err)
+			if err == io.EOF {
+				break
+			}
+			check(err)
+			t.Log(v)
 		}
 	}()
 
@@ -69,6 +77,8 @@ func TestClicking(t *testing.T) {
 	err = th.Wait()
 
 	i3exit := exec.Command("i3-msg", "exit")
+	i3exit.Stdout = os.Stderr
+	i3exit.Stderr = os.Stderr
 	i3exit.Env = append(os.Environ(), "DISPLAY=:23")
 	out, err := i3exit.CombinedOutput()
 	r.NoError(err, "failed to start the shut down i3: %s", string(out))
@@ -80,4 +90,17 @@ func TestClicking(t *testing.T) {
 	fmt.Println("waiting for xvfb")
 	err = xvfb.Wait()
 	r.NoError(err)
+}
+
+func check(err error) {
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "go routine check failed: %#v\n", err)
+		debug.PrintStack()
+		os.Exit(1)
+	}
+}
+
+func halt(cmd *exec.Cmd) {
+	fmt.Fprintln(os.Stderr, "halting:", cmd.Path)
+	cmd.Process.Kill()
 }

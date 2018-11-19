@@ -88,7 +88,8 @@ func onReady() {
 
 		fmt.Println(`{"type": "ready"}`)
 
-		stdinDec := json.NewDecoder(input) // debug: io.TeeReader(input, os.Stderr))
+		//stdinDec := json.NewDecoder(input) // debug: io.TeeReader(input, os.Stderr))
+		stdinDec := json.NewDecoder(io.TeeReader(input, os.Stderr))
 		stdoutEnc := json.NewEncoder(output)
 
 		var menu Menu
@@ -101,11 +102,18 @@ func onReady() {
 			err = errors.Wrap(err, "failed to decode initial menu config")
 			fmt.Fprintln(os.Stderr, err)
 		}
-		// fmt.Println("menu", menu)
+		//fmt.Fprintln(os.Stderr, "menu:", menu)
 		icon, err := base64.StdEncoding.DecodeString(menu.Icon)
 		if err != nil {
 			err = errors.Wrap(err, "failed to decode initial b64 menu icon")
 			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+
+		if len(icon) == 0 {
+			err = errors.Errorf("menu icon does not contain any bytes")
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
 		}
 		systray.SetIcon(icon)
 		systray.SetTitle(menu.Title)
@@ -182,6 +190,7 @@ func onReady() {
 					err = errors.Wrap(err, "failed to decode action")
 					fmt.Fprint(os.Stderr, "action loop error:", err)
 				}
+				fmt.Fprintln(os.Stderr, "got action:", action)
 				update(action)
 			}
 		}()
