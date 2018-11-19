@@ -10,7 +10,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cryptix/go/logging/logtest"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
 )
@@ -18,8 +17,8 @@ import (
 func TestClicking(t *testing.T) {
 	var err error
 	r := require.New(t)
-	//logOut:= os.Stderr
-	logOut := logtest.Logger("Xlog", t)
+	logOut := os.Stderr
+	//logOut := logtest.Logger("Xlog", t)
 
 	var neededTools = []string{
 		"Xvfb",         // virtual X11 server

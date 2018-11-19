@@ -10,6 +10,4 @@ echo debug: $TRAVIS_OS_NAME $DISPLAY
 go build -v -i
 export PATH=$PATH:$(pwd) # expose helper
 
-go get -v github.com/stretchr/testify/require
-go get -v github.com/cryptix/go/logging/logtest
-go test ./integration
+go test -v ./integration
