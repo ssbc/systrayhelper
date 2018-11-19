@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cryptix/go/logging/logtest"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
 )
@@ -17,8 +18,8 @@ import (
 func TestClicking(t *testing.T) {
 	var err error
 	r := require.New(t)
-	logOut := os.Stderr
-	//logOut := logtest.Logger("Xlog", t)
+	//logOut := os.Stderr
+	logOut := logtest.Logger("Xlog", t)
 
 	var neededTools = []string{
 		"Xvfb",         // virtual X11 server
@@ -38,17 +39,34 @@ func TestClicking(t *testing.T) {
 	fmt.Fprintln(logOut, "xvfb started. PID:", xvfb.Process.Pid)
 	defer halt(xvfb)
 
-	if _, ok := os.LookupEnv("TRAY_DEBUG"); ok {
+	if _, ok := os.LookupEnv("TRAY_WATCH"); ok {
 		vncS := exec.Command("x11vnc", "-multiptr", "-display", ":23")
 		vncS.Stdout = logOut
 		vncS.Stderr = logOut
 		vncS.Env = append(os.Environ(), "DISPLAY=:23")
 		err = vncS.Start()
 		r.NoError(err, "failed to start vncS (for its tray area)")
-		fmt.Println("vncS started. PID:", vncS.Process.Pid)
+		fmt.Fprintln(logOut, "vncS started. PID:", vncS.Process.Pid)
 		defer halt(vncS)
+		time.Sleep(time.Second * 10)
+	}
 
-		time.Sleep(time.Second * 5)
+	var ffmpeg *exec.Cmd
+	if _, ok := os.LookupEnv("TRAY_RECORD"); ok {
+		ffmpeg = exec.Command("ffmpeg",
+			"-an",
+			"-f", "x11grab",
+			"-framerate", "25",
+			"-video_size", "cif",
+			"-follow_mouse", "centered",
+			"-draw_mouse", "1",
+			"-i", ":23", "recording.mp4")
+		ffmpeg.Stderr = os.Stderr
+		ffmpeg.Stdout = os.Stderr
+		err = ffmpeg.Start()
+		r.NoError(err, "failed to start vncS (for its tray area)")
+		fmt.Fprintln(logOut, "ffmpeg started. PID:", ffmpeg.Process.Pid)
+		time.Sleep(time.Second * 2)
 	}
 
 	i3 := exec.Command("i3")
@@ -135,6 +153,12 @@ func TestClicking(t *testing.T) {
 	t.Log("waiting for i3")
 	err = i3.Wait()
 	r.NoError(err)
+
+	if ffmpeg != nil {
+		ffmpeg.Process.Signal(os.Interrupt)
+		err := ffmpeg.Wait()
+		t.Log(err) // 255? look for "exited normaly"
+	}
 
 	t.Log("waiting for xvfb")
 	xvfb.Wait()

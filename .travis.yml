@@ -8,6 +8,7 @@ addons:
       - xvfb
       - xdotool
       - i3
+      - ffmpeg
       - libgtk-3-dev
       - libappindicator3-dev
       - rpm
