@@ -8,13 +8,18 @@ import (
 	"os/exec"
 	"runtime/debug"
 	"testing"
+	"time"
 
+	"github.com/cryptix/go/logging/logtest"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
 )
 
 func TestClicking(t *testing.T) {
 	var err error
 	r := require.New(t)
+	//logOut:= os.Stderr
+	logOut := logtest.Logger("Xlog", t)
 
 	var neededTools = []string{
 		"Xvfb",         // virtual X11 server
@@ -28,39 +33,53 @@ func TestClicking(t *testing.T) {
 	}
 
 	xvfb := exec.Command("Xvfb", ":23", "-screen", "0", "800x600x16")
-	xvfb.Stderr = os.Stderr
+	xvfb.Stderr = logOut
 	err = xvfb.Start()
 	r.NoError(err, "failed to start virtual X framebuffer")
-	fmt.Println("xvfb started. PID:", xvfb.Process.Pid)
+	fmt.Fprintln(logOut, "xvfb started. PID:", xvfb.Process.Pid)
 	defer halt(xvfb)
 
+	if _, ok := os.LookupEnv("TRAY_DEBUG"); ok {
+		vncS := exec.Command("x11vnc", "-multiptr", "-display", ":23")
+		vncS.Stdout = logOut
+		vncS.Stderr = logOut
+		vncS.Env = append(os.Environ(), "DISPLAY=:23")
+		err = vncS.Start()
+		r.NoError(err, "failed to start vncS (for its tray area)")
+		fmt.Println("vncS started. PID:", vncS.Process.Pid)
+		defer halt(vncS)
+
+		time.Sleep(time.Second * 5)
+	}
+
 	i3 := exec.Command("i3")
-	i3.Stdout = os.Stderr
-	i3.Stderr = os.Stderr
+	//i3.Stdout = logOut
+	//i3.Stderr = logOut
 	i3.Env = append(os.Environ(), "DISPLAY=:23")
 	err = i3.Start()
 	r.NoError(err, "failed to start i3 (for its tray area)")
-	fmt.Println("i3 started. PID:", i3.Process.Pid)
+	fmt.Fprintln(logOut, "i3 started. PID:", i3.Process.Pid)
 	defer halt(i3)
 
 	th := exec.Command("systrayhelper")
-	th.Stderr = os.Stderr
+	th.Stderr = logOut
 	th.Env = append(os.Environ(), "DISPLAY=:23")
-
+	stdout, err := th.StdoutPipe()
+	r.NoError(err)
 	testJson, err := os.Open("../test.json")
 	r.NoError(err)
 	th.Stdin = testJson
 	defer testJson.Close()
 
-	stdout, err := th.StdoutPipe()
-	r.NoError(err)
-
 	err = th.Start()
 	r.NoError(err, "failed to start the actual helper")
-	fmt.Println("helper started. PID:", th.Process.Pid)
+	fmt.Fprintln(logOut, "helper started. PID:", th.Process.Pid)
 	defer halt(th)
 
+	thready := make(chan struct{})
+	clickSent := make(chan struct{})
 	go func() {
+		var clicked bool
 		dec := json.NewDecoder(stdout)
 		for {
 			var v map[string]interface{}
@@ -69,27 +88,59 @@ func TestClicking(t *testing.T) {
 				break
 			}
 			check(err)
-			t.Log(v)
+			fmt.Fprintf(logOut, "got stdout (c?:%v): %+v\n", clicked, v)
+
+			if is, ok := v["type"]; ok && is == "ready" {
+				close(thready)
+				<-clickSent
+				clicked = true
+				continue
+			}
+
+			if is, ok := v["type"]; ok && clicked && is == "clicked" {
+				halt(th)
+			}
 		}
 	}()
 
-	fmt.Println("waiting for trayhelper")
+	go func() {
+		<-thready
+
+		xdt := exec.Command("xdotool",
+			"mousemove", "793", "593",
+			"sleep", "1",
+			"click", "1",
+			"sleep", "1",
+			"mousemove_relative", "--", "0", "-20",
+			"sleep", "1",
+			"click", "1")
+		xdt.Env = append(os.Environ(), "DISPLAY=:23")
+		out, err := xdt.CombinedOutput()
+		check(errors.Wrapf(err, "failed to click menu: %s", string(out)))
+
+		fmt.Fprintln(logOut, "clicks send")
+		close(clickSent)
+	}()
+
+	fmt.Fprintln(logOut, "waiting for trayhelper")
 	err = th.Wait()
 
 	i3exit := exec.Command("i3-msg", "exit")
-	i3exit.Stdout = os.Stderr
-	i3exit.Stderr = os.Stderr
 	i3exit.Env = append(os.Environ(), "DISPLAY=:23")
-	out, err := i3exit.CombinedOutput()
-	r.NoError(err, "failed to start the shut down i3: %s", string(out))
+	i3exit.Stdout = logOut
+	i3exit.Stderr = logOut
+	err = i3exit.Run()
+	t.Log("i3-msg:", err)
+	//r.NoError(err, "failed to start the shut down i3")
 
-	fmt.Println("waiting for i3")
+	t.Log("waiting for i3")
 	err = i3.Wait()
 	r.NoError(err)
 
-	fmt.Println("waiting for xvfb")
-	err = xvfb.Wait()
-	r.NoError(err)
+	t.Log("waiting for xvfb")
+	xvfb.Wait()
+	//err = xvfb.Wait()
+	//r.NoError(err)
 }
 
 func check(err error) {
