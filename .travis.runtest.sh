@@ -1,13 +1,15 @@
 #!/bin/bash
 set -e
 
-if [[ $TRAVIS_OS_NAME != 'linux' ]]; then
-  echo "integration testing is only supported on linux (using Xvfb and xdotool)"
-  exit 1
+echo debug: $TRAVIS_OS_NAME $DISPLAY
+
+if [[ $TRAVIS_OS_NAME == 'linux' ]]; then
+  # "integration testing is only supported on linux (using Xvfb and xdotool)"
+  go build -v -i
+  export PATH=$PATH:$(pwd) # expose helper
+  go test -v ./...
+else
+  go test -v
 fi
 
-echo debug: $TRAVIS_OS_NAME $DISPLAY
-go build -v -i
-export PATH=$PATH:$(pwd) # expose helper
 
-go test -v ./integration
