@@ -6,6 +6,8 @@ addons:
   apt:
     packages:
       - xvfb
+      - xdotool
+      - i3
       - libgtk-3-dev
       - libappindicator3-dev
       - rpm

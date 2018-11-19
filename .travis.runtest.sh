@@ -1,10 +1,14 @@
 #!/bin/bash
 
-if [[ $TRAVIS_OS_NAME == 'linux' ]]; then
-  export DISPLAY=':99.0'
-  Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
-  echo started xvfb
+if [[ $TRAVIS_OS_NAME != 'linux' ]]; then
+  echo "integration testing is only supported on linux (using Xvfb and xdotool)"
+  exit 1
 fi
 
 echo debug: $TRAVIS_OS_NAME $DISPLAY
-go test ./...
+go build -v -i
+export PATH=$PATH:$(pwd) // expose helper
+
+go get -v github.com/stretchr/testify/require
+go get -v github.com/cryptix/go/logging/logtest
+go test ./integration
