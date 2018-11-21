@@ -10,7 +10,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cryptix/go/logging/logtest"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
 )
@@ -18,8 +17,7 @@ import (
 func TestClicking(t *testing.T) {
 	var err error
 	r := require.New(t)
-	//logOut := os.Stderr
-	logOut := logtest.Logger("Xlog", t)
+	logOut := os.Stderr
 
 	var neededTools = []string{
 		"Xvfb",         // virtual X11 server
@@ -83,10 +81,10 @@ func TestClicking(t *testing.T) {
 	th.Env = append(os.Environ(), "DISPLAY=:23")
 	stdout, err := th.StdoutPipe()
 	r.NoError(err)
-	testJson, err := os.Open("../test.json")
+	testJSON, err := os.Open("../test.json")
 	r.NoError(err)
-	th.Stdin = testJson
-	defer testJson.Close()
+	th.Stdin = testJSON
+	defer testJSON.Close()
 
 	err = th.Start()
 	r.NoError(err, "failed to start the actual helper")
