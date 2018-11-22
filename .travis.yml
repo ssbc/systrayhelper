@@ -8,7 +8,6 @@ addons:
       - xvfb
       - xdotool
       - i3
-      - ffmpeg
       - libgtk-3-dev
       - libappindicator3-dev
       - rpm
@@ -17,17 +16,13 @@ language: go
 
 go:
   - "1.x"
-  - "1.7.x"
   - "1.10.x"
+  - "1.11.x"
   - master
 
-# passed two times except osx w/ go 1.7
-# https://travis-ci.org/ssbc/systrayhelper/builds/402264830
-# https://travis-ci.org/ssbc/systrayhelper/builds/402261541
 matrix:
   allow_failures:
     - go: master
-    - go: "1.7.x"
 
 go_import_path: github.com/ssbc/systrayhelper
 
@@ -41,7 +36,7 @@ deploy:
   script: bash .goreleaser.sh
   on:
     tags: true
-    go: "1.10.x"
+    go: "1.11.x"
 
 
 # food for thought: complex example: https://github.com/tsuru/tsuru/blob/master/.travis.yml

@@ -11,9 +11,10 @@ if [[ $TRAVIS_OS_NAME == 'linux' ]]; then
     go build -v
     export PATH=$PATH:$(pwd)
   }
-  export TRAY_RECORD=1
+  Xvfb ":23" -screen 0 800x600x16 &
+  export DISPLAY=":23"
+  export TRAY_XVFBRUNNING=t
   go test -v ./...
-  # TODO: curl -H "Auhtorization:$SECRET_TOKEN1" --data-binary @"integration/test.mp4" https://boxbox
 else
   go test -v
 fi

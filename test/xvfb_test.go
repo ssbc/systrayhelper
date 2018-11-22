@@ -31,7 +31,7 @@ func TestClicking(t *testing.T) {
 	}
 
 	var xvfb *exec.Cmd
-	if _, ok := os.LookupEnv("TRAY_STARTXVFB"); ok {
+	if _, ok := os.LookupEnv("TRAY_XVFBRUNNING"); !ok {
 		xvfb = exec.Command("Xvfb", ":23", "-screen", "0", "800x600x16")
 		xvfb.Stdout = logOut
 		xvfb.Stderr = logOut
@@ -72,7 +72,7 @@ func TestClicking(t *testing.T) {
 		time.Sleep(time.Second * 2)
 	}
 
-	i3 := exec.Command("i3", "-c", "i3_config")
+	i3 := exec.Command("i3", "-V", "-a", "-c", "i3_config")
 	i3.Stdout = logOut
 	i3.Stderr = logOut
 	i3.Env = append(os.Environ(), "DISPLAY=:23")
