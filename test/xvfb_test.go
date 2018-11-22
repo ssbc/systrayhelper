@@ -30,12 +30,16 @@ func TestClicking(t *testing.T) {
 		t.Logf("found %s here: %s", n, location)
 	}
 
-	xvfb := exec.Command("Xvfb", ":23", "-screen", "0", "800x600x16")
-	xvfb.Stderr = logOut
-	err = xvfb.Start()
-	r.NoError(err, "failed to start virtual X framebuffer")
-	fmt.Fprintln(logOut, "xvfb started. PID:", xvfb.Process.Pid)
-	defer halt(xvfb)
+	var xvfb *exec.Cmd
+	if _, ok := os.LookupEnv("TRAY_STARTXVFB"); ok {
+		xvfb = exec.Command("Xvfb", ":23", "-screen", "0", "800x600x16")
+		xvfb.Stdout = logOut
+		xvfb.Stderr = logOut
+		err = xvfb.Start()
+		r.NoError(err, "failed to start virtual X framebuffer")
+		fmt.Fprintln(logOut, "xvfb started. PID:", xvfb.Process.Pid)
+		defer halt(xvfb)
+	}
 
 	if _, ok := os.LookupEnv("TRAY_WATCH"); ok {
 		vncS := exec.Command("x11vnc", "-multiptr", "-display", ":23")
@@ -43,33 +47,34 @@ func TestClicking(t *testing.T) {
 		vncS.Stderr = logOut
 		vncS.Env = append(os.Environ(), "DISPLAY=:23")
 		err = vncS.Start()
-		r.NoError(err, "failed to start vncS (for its tray area)")
+		r.NoError(err, "failed to start x11vnc")
 		fmt.Fprintln(logOut, "vncS started. PID:", vncS.Process.Pid)
 		defer halt(vncS)
 		time.Sleep(time.Second * 10)
 	}
 
 	var ffmpeg *exec.Cmd
-	if _, ok := os.LookupEnv("TRAY_RECORD"); ok {
+	if fname, ok := os.LookupEnv("TRAY_RECORD"); ok {
 		ffmpeg = exec.Command("ffmpeg",
+			"-y",
 			"-an",
 			"-f", "x11grab",
 			"-framerate", "25",
 			"-video_size", "cif",
 			"-follow_mouse", "centered",
 			"-draw_mouse", "1",
-			"-i", ":23", "recording.mp4")
+			"-i", ":23", fname)
 		ffmpeg.Stderr = os.Stderr
 		ffmpeg.Stdout = os.Stderr
 		err = ffmpeg.Start()
-		r.NoError(err, "failed to start vncS (for its tray area)")
+		r.NoError(err, "failed to start ffmpeg recording")
 		fmt.Fprintln(logOut, "ffmpeg started. PID:", ffmpeg.Process.Pid)
 		time.Sleep(time.Second * 2)
 	}
 
-	i3 := exec.Command("i3")
-	//i3.Stdout = logOut
-	//i3.Stderr = logOut
+	i3 := exec.Command("i3", "-c", "i3_config")
+	i3.Stdout = logOut
+	i3.Stderr = logOut
 	i3.Env = append(os.Environ(), "DISPLAY=:23")
 	err = i3.Start()
 	r.NoError(err, "failed to start i3 (for its tray area)")
@@ -158,10 +163,11 @@ func TestClicking(t *testing.T) {
 		t.Log(err) // 255? look for "exited normaly"
 	}
 
-	t.Log("waiting for xvfb")
-	xvfb.Wait()
-	//err = xvfb.Wait()
-	//r.NoError(err)
+	if _, ok := os.LookupEnv("TRAY_STARTXVFB"); ok {
+		t.Log("waiting for xvfb")
+		err = xvfb.Wait()
+		t.Log("xvfb err: err")
+	}
 }
 
 func check(err error) {

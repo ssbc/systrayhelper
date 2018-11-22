@@ -1,0 +1,5 @@
+font fixed
+
+bar {
+  status_command i3status
+}

@@ -11,11 +11,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:54d414482fb70eaccdd6e6fca023986b16ab3004e5b499b6bc3667d89574fc07"
+  digest = "1:c3c09c0f941175181747b2d6948fd1add3ba82e66215aae78ec9b44d97d8ed40"
   name = "github.com/getlantern/context"
   packages = ["."]
   pruneopts = "UT"
-  revision = "624d99b1798d7c5375ea1d3ca4c5b04d58f7c775"
+  revision = "539649cc311886ee3604204cfab46f72b5f40950"
 
 [[projects]]
   branch = "master"
@@ -59,11 +59,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:9ea828b0087cf226e4589379359e114214dc218022bb4e96fe529e05531bfa35"
+  digest = "1:24b1213b120b37fa3edb567e4e052abd05a54ebfaef43443c76a5f75afe5ae58"
   name = "github.com/getlantern/systray"
   packages = ["."]
   pruneopts = "UT"
-  revision = "e31397f8c6928d98a8a9a7e80087aebcf0090beb"
+  revision = "19c034af4717bf1737fc722e1804f5eb57e3bec5"
 
 [[projects]]
   digest = "1:586ea76dbd0374d6fb649a91d70d652b7fe0ccffb8910a77468e7702e7901f3d"
@@ -114,7 +114,7 @@
   name = "golang.org/x/sys"
   packages = ["windows"]
   pruneopts = "UT"
-  revision = "8e24a49d80f82323e1c4db1b5da3e0f31171a151"
+  revision = "0cf1ed9e522b7dbb416f080a5c8003de9b702bf4"
 
 [solve-meta]
   analyzer-name = "dep"
