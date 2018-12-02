@@ -90,20 +90,40 @@ func TestClicking(t *testing.T) {
 	th.Stderr = logOut
 	stdout, err := th.StdoutPipe()
 	r.NoError(err)
-	testJSON, err := os.Open("../test.json")
+	stdin, err := th.StdinPipe()
 	r.NoError(err)
-	th.Stdin = testJSON
-	defer testJSON.Close()
 
 	err = th.Start()
 	r.NoError(err, "failed to start the actual helper")
 	fmt.Fprintln(logOut, "helper started. PID:", th.Process.Pid)
 	defer halt(th)
 
+	testJSON, err := os.Open("../test.json")
+	r.NoError(err)
+
+	n, err := io.Copy(stdin, testJSON)
+	r.NoError(err)
+	testJSON.Close()
+
+	t.Logf("sent %d bytes of init json", n)
+
+	msgs := make(chan interface{})
+	go func() {
+		enc := json.NewEncoder(stdin)
+		for m := range msgs {
+			err = enc.Encode(m)
+			if err == io.EOF {
+				break
+			}
+			check(errors.Wrap(err, "encode error to helper"))
+			fmt.Fprintf(logOut, "got sent %+v\n", m)
+		}
+	}()
+
 	thready := make(chan struct{})
 	clickSent := make(chan struct{})
+	var clicked bool
 	go func() {
-		var clicked bool
 		dec := json.NewDecoder(stdout)
 		for {
 			var v map[string]interface{}
@@ -111,7 +131,7 @@ func TestClicking(t *testing.T) {
 			if err == io.EOF {
 				break
 			}
-			check(err)
+			check(errors.Wrap(err, "decode error from helper"))
 			fmt.Fprintf(logOut, "got stdout (c?:%v): %+v\n", clicked, v)
 
 			if is, ok := v["type"]; ok && is == "ready" {
@@ -122,7 +142,8 @@ func TestClicking(t *testing.T) {
 			}
 
 			if is, ok := v["type"]; ok && clicked && is == "clicked" {
-				halt(th)
+				t.Log("done!")
+				stdin.Close()
 			}
 		}
 	}()
@@ -158,6 +179,7 @@ func TestClicking(t *testing.T) {
 	t.Log("waiting for i3")
 	err = i3.Wait()
 	r.NoError(err)
+	r.True(clicked)
 
 	if ffmpeg != nil {
 		ffmpeg.Process.Signal(os.Interrupt)

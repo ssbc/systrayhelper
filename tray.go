@@ -185,7 +185,7 @@ func onReady() {
 				if err := stdinDec.Decode(&action); err != nil {
 					if err == io.EOF {
 						fmt.Fprint(os.Stderr, "trayhelper warning: input decoder loop exited with EOF\n")
-						break
+						os.Exit(0)
 					}
 					err = errors.Wrap(err, "failed to decode action")
 					fmt.Fprint(os.Stderr, "action loop error:", err)
