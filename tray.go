@@ -77,7 +77,7 @@ func onReady() {
 				fmt.Fprintf(os.Stderr, "%s: exiting\n", os.Args[0])
 				systray.Quit()
 			default:
-				fmt.Println("Unhandled signal:", sig)
+				fmt.Fprintln(os.Stderr, "Unhandled signal:", sig)
 			}
 		}
 	}()
@@ -86,10 +86,10 @@ func onReady() {
 	go func() {
 		var items []*systray.MenuItem
 
-		fmt.Println(`{"type": "ready"}`)
+		fmt.Fprintln(output, `{"type": "ready"}`)
 
-		//stdinDec := json.NewDecoder(input) // debug: io.TeeReader(input, os.Stderr))
-		stdinDec := json.NewDecoder(io.TeeReader(input, os.Stderr))
+		//stdinDec := json.NewDecoder(io.TeeReader(input, os.Stderr))
+		stdinDec := json.NewDecoder(input)
 		stdoutEnc := json.NewEncoder(output)
 
 		var menu Menu

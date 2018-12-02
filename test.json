@@ -4,14 +4,12 @@
     "tooltip": "Tips",
     "items": [
         {
-            "title": "w",
-            "tooltip": "welcome to the tests...!",
+            "title": "welcome to the tests...!",
             "checked": true,
             "enabled": false
         },
         {
-            "title": "Not yet quit",
-            "tooltip": "q",
+            "title": "entry two",
             "checked": false,
             "enabled": true
         }
@@ -21,8 +19,7 @@
     "type": "update-item",
     "seq_id": 1,
     "item": {
-        "title": "Quit",
-        "tooltip": "q",
+        "title": "these are a mirage right now",
         "checked": false,
         "enabled": true
     }

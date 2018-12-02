@@ -20,7 +20,7 @@ func TestClicking(t *testing.T) {
 	logOut := os.Stderr
 
 	var neededTools = []string{
-		"Xvfb",         // virtual X11 server
+		//"Xvfb",         // virtual X11 server
 		"i3", "i3-msg", // for known bar location (lower right area)
 		"xdotool", // simulate clicks
 		"systrayhelper"}
@@ -78,13 +78,16 @@ func TestClicking(t *testing.T) {
 		time.Sleep(time.Second * 2)
 	}
 
-	i3 := exec.Command("i3", "-V", "-a", "-c", "i3_config")
-	i3.Stdout = logOut
-	i3.Stderr = logOut
-	err = i3.Start()
-	r.NoError(err, "failed to start i3 (for its tray area)")
-	fmt.Fprintln(logOut, "i3 started. PID:", i3.Process.Pid)
-	defer halt(i3)
+	var i3 *exec.Cmd
+	if _, ok := os.LookupEnv("TRAY_I3"); ok {
+		i3 = exec.Command("i3", "-V", "-a", "-c", "i3_config")
+		i3.Stdout = logOut
+		i3.Stderr = logOut
+		err = i3.Start()
+		r.NoError(err, "failed to start i3 (for its tray area)")
+		fmt.Fprintln(logOut, "i3 started. PID:", i3.Process.Pid)
+		defer halt(i3)
+	}
 
 	th := exec.Command("systrayhelper")
 	th.Stderr = logOut
@@ -116,43 +119,54 @@ func TestClicking(t *testing.T) {
 				break
 			}
 			check(errors.Wrap(err, "encode error to helper"))
-			fmt.Fprintf(logOut, "got sent %+v\n", m)
+			fmt.Fprintf(logOut, "sent msg %+v\n", m)
 		}
 	}()
 
 	thready := make(chan struct{})
-	clickSent := make(chan struct{})
-	var clicked bool
+	startLvl1 := make(chan struct{})
+	startLevel2 := make(chan struct{})
+	var level1, level2 bool
 	go func() {
 		dec := json.NewDecoder(stdout)
 		for {
-			var v map[string]interface{}
+			var v Action
 			err = dec.Decode(&v)
 			if err == io.EOF {
 				break
 			}
 			check(errors.Wrap(err, "decode error from helper"))
-			fmt.Fprintf(logOut, "got stdout (c?:%v): %+v\n", clicked, v)
+			fmt.Fprintf(logOut, "got stdout (c?:%v): %+v\n", level1, v)
 
-			if is, ok := v["type"]; ok && is == "ready" {
+			if v.Type == "ready" {
 				close(thready)
-				<-clickSent
-				clicked = true
+				<-startLvl1
 				continue
 			}
 
-			if is, ok := v["type"]; ok && clicked && is == "clicked" {
-				t.Log("done!")
-				stdin.Close()
+			if v.Type == "clicked" {
+				// TODO: fix title
+				t.Logf("clicked %d: %s", v.SeqID, v.Item.Title)
+				switch {
+				case !level1 && v.SeqID == 1:
+					level1 = true
+					close(startLevel2)
+				case level1 && v.SeqID == 0:
+					level2 = true
+					stdin.Close()
+				}
 			}
 		}
 	}()
 
+	// level 1
 	go func() {
 		<-thready
 
 		xdt := exec.Command("xdotool",
-			"mousemove", "793", "593",
+			"mousemove",
+			//"1675", "1045",
+			"793", "593",
 			"sleep", "1",
 			"click", "1",
 			"sleep", "1",
@@ -163,28 +177,59 @@ func TestClicking(t *testing.T) {
 		check(errors.Wrapf(err, "failed to click menu: %s", string(out)))
 
 		fmt.Fprintln(logOut, "clicks send")
-		close(clickSent)
+		close(startLvl1)
+	}()
+
+	go func() { // level 2
+		<-startLevel2
+		msgs <- Action{
+			Type: "update-item",
+			Item: Item{
+				Title:   "final",
+				Enabled: true,
+			},
+			SeqID: 0,
+		}
+
+		xdt := exec.Command("xdotool",
+			"mousemove",
+			//"1675", "1045",
+			"793", "593",
+			"sleep", "1",
+			"click", "1",
+			"sleep", "1",
+			"mousemove_relative", "--", "0", "-50",
+			"sleep", "1",
+			"click", "1")
+		out, err := xdt.CombinedOutput()
+		check(errors.Wrapf(err, "failed to click menu: %s", string(out)))
+
+		fmt.Fprintln(logOut, "level2 send")
+
 	}()
 
 	fmt.Fprintln(logOut, "waiting for trayhelper")
 	err = th.Wait()
-
-	i3exit := exec.Command("i3-msg", "exit")
-	i3exit.Stdout = logOut
-	i3exit.Stderr = logOut
-	err = i3exit.Run()
-	t.Log("i3-msg:", err)
-	//r.NoError(err, "failed to start the shut down i3")
-
-	t.Log("waiting for i3")
-	err = i3.Wait()
 	r.NoError(err)
-	r.True(clicked)
+	r.True(level1)
+	r.True(level2)
+
+	if _, ok := os.LookupEnv("TRAY_I3"); ok {
+		i3exit := exec.Command("i3-msg", "exit")
+		i3exit.Stdout = logOut
+		i3exit.Stderr = logOut
+		err = i3exit.Run()
+		t.Log("i3-msg:", err)
+		//r.NoError(err, "failed to start the shut down i3")
+
+		t.Log("waiting for i3")
+		err = i3.Wait()
+	}
 
 	if ffmpeg != nil {
 		ffmpeg.Process.Signal(os.Interrupt)
 		err := ffmpeg.Wait()
-		t.Log(err) // 255? look for "exited normaly"
+		t.Log("ffmpeg err:", err) // 255? look for "exited normaly"
 	}
 
 	if xvfb != nil {
@@ -196,7 +241,7 @@ func TestClicking(t *testing.T) {
 
 func check(err error) {
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "go routine check failed: %#v\n", err)
+		fmt.Fprintf(os.Stderr, "go routine check failed: %+v\n", err)
 		debug.PrintStack()
 		os.Exit(1)
 	}
@@ -205,4 +250,24 @@ func check(err error) {
 func halt(cmd *exec.Cmd) {
 	fmt.Fprintln(os.Stderr, "halting:", cmd.Path)
 	cmd.Process.Kill()
+}
+
+// meh - move main to cmd/jsonhelper
+type Action struct {
+	Type  string `json:"type"`
+	Item  Item   `json:"item"`
+	Menu  Menu   `json:"menu"`
+	SeqID int    `json:"seq_id"`
+}
+type Item struct {
+	Title   string `json:"title"`
+	Tooltip string `json:"tooltip"`
+	Enabled bool   `json:"enabled"`
+	Checked bool   `json:"checked"`
+}
+type Menu struct {
+	Icon    string `json:"icon"`
+	Title   string `json:"title"`
+	Tooltip string `json:"tooltip"`
+	Items   []Item `json:"items"`
 }
