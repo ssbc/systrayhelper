@@ -10,6 +10,7 @@ if [[ $TRAVIS_OS_NAME == 'linux' ]]; then
     go build -v -i
     export PATH=$PATH:$(pwd)
   }
+  export TRAY_I3=t
   xvfb-run -s '-screen 0 800x600x16' dbus-run-session go test -v ./...
 else
   go test -v

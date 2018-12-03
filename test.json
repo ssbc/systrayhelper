@@ -11,7 +11,7 @@
         {
             "title": "entry two",
             "checked": false,
-            "enabled": true
+            "enabled": false
         }
     ]
 }
@@ -19,7 +19,7 @@
     "type": "update-item",
     "seq_id": 1,
     "item": {
-        "title": "these are a mirage right now",
+        "title": "check new title",
         "checked": false,
         "enabled": true
     }

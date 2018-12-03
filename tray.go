@@ -41,6 +41,7 @@ type Item struct {
 	Tooltip string `json:"tooltip"`
 	Enabled bool   `json:"enabled"`
 	Checked bool   `json:"checked"`
+	Hidden  bool   `json:"hidden"`
 }
 
 // Menu has an icon, title and list of items
@@ -102,7 +103,7 @@ func onReady() {
 			err = errors.Wrap(err, "failed to decode initial menu config")
 			fmt.Fprintln(os.Stderr, err)
 		}
-		//fmt.Fprintln(os.Stderr, "menu:", menu)
+
 		icon, err := base64.StdEncoding.DecodeString(menu.Icon)
 		if err != nil {
 			err = errors.Wrap(err, "failed to decode initial b64 menu icon")
@@ -134,6 +135,11 @@ func onReady() {
 				menuItem.Enable()
 			} else {
 				menuItem.Disable()
+			}
+			if item.Hidden {
+				menuItem.Hide()
+			} else {
+				menuItem.Show()
 			}
 			menuItem.SetTitle(item.Title)
 			menuItem.SetTooltip(item.Tooltip)
@@ -182,7 +188,9 @@ func onReady() {
 						Item:  menu.Items[i], // keeps updated title
 						SeqID: i,
 					})
-					fmt.Fprintln(os.Stderr, "clicked err:", err)
+					if err != nil {
+						fmt.Fprintln(os.Stderr, "clicked err:", err)
+					}
 				}
 			}()
 		}

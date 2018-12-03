@@ -7,6 +7,8 @@ import (
 	"os"
 	"os/exec"
 	"runtime/debug"
+	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -45,10 +47,20 @@ func TestClicking(t *testing.T) {
 		defer halt(xvfb)
 		disp = ":23"
 	}
-	//thx, thy := "793", "593"
-	thx, thy := "1675", "1045"
 
-	t.Logf("using DISPLAY: %s", disp)
+	xdt := exec.Command("xdotool", "getdisplaygeometry")
+	out, err := xdt.CombinedOutput()
+	r.NoError(errors.Wrapf(err, "failed to click menu: %s", string(out)))
+
+	xy := strings.Split(strings.TrimSpace(string(out)), " ")
+	r.Len(xy, 2)
+	dispx, err := strconv.Atoi(xy[0])
+	r.NoError(errors.Wrapf(err, "failed to decode X: %s", xy))
+	dispy, err := strconv.Atoi(xy[1])
+	r.NoError(errors.Wrapf(err, "failed to decode y: %s", xy))
+
+	thx := fmt.Sprint(dispx - 7)
+	thy := fmt.Sprint(dispy - 7)
 
 	if _, ok := os.LookupEnv("TRAY_WATCH"); ok {
 		vncS := exec.Command("x11vnc", "-multiptr", "-display", disp)
@@ -67,11 +79,12 @@ func TestClicking(t *testing.T) {
 			"-y",
 			"-an",
 			"-f", "x11grab",
-			"-framerate", "25",
-			"-video_size", "cif",
 			"-follow_mouse", "centered",
 			"-draw_mouse", "1",
-			"-i", disp, fname)
+			"-framerate", "10",
+			"-video_size", "cif",
+			"-i", disp,
+			fname)
 		ffmpeg.Stderr = os.Stderr
 		ffmpeg.Stdout = os.Stderr
 		err = ffmpeg.Start()
@@ -150,12 +163,11 @@ func TestClicking(t *testing.T) {
 			}
 
 			if v.Type == "clicked" {
-				// TODO: fix title
 				t.Logf("lvl:%d - clicked %d: %s", lvl, v.SeqID, v.Item.Title)
 				switch {
-				case lvl == 1 && v.Item.Title == "these are a mirage right now":
+				case lvl == 1 && v.Item.Title == "check new title":
 					close(startLvl2)
-				case lvl == 2 && v.Item.Title == "enabled":
+				case lvl == 2 && v.SeqID == 0 && v.Item.Title == "enabled":
 					close(startLvl3)
 				case lvl == 3 && v.SeqID == 0 && v.Item.Title == "now with more items":
 					close(startLvl4)
@@ -172,10 +184,15 @@ func TestClicking(t *testing.T) {
 	go func() {
 		<-thready
 
+		msgs <- Action{
+			Type: "update-item", SeqID: 555,
+			Item: Item{Title: "does not exist"},
+		}
+
 		xdt := exec.Command("xdotool",
-			"mousemove", thx, thy,
-			"sleep", "1",
-			"click", "1",
+			"mousemove", thx, thy, "sleep", "1", "click", "1",
+			"mousemove", thx, thy, "sleep", "1", "click", "1",
+			"mousemove", thx, thy, "sleep", "1", "click", "1",
 			"sleep", "1",
 			"mousemove_relative", "--", "0", "-20",
 			"sleep", "1",
@@ -191,18 +208,19 @@ func TestClicking(t *testing.T) {
 		<-startLvl2
 		lvl++
 		msgs <- Action{
-			Type: "update-item",
-			Item: Item{
-				Title:   "enabled",
-				Enabled: true,
-			},
-			SeqID: 0,
+			Type: "update-item", SeqID: 0,
+			Item: Item{Title: "enabled", Enabled: true},
+		}
+
+		msgs <- Action{
+			Type: "update-item", SeqID: 1,
+			Item: Item{Title: "hidden", Hidden: true},
 		}
 
 		xdt := exec.Command("xdotool",
-			"mousemove", thx, thy,
-			"sleep", "1",
-			"click", "1",
+			"mousemove", thx, thy, "sleep", "1", "click", "1",
+			"mousemove", thx, thy, "sleep", "1", "click", "1",
+			"mousemove", thx, thy, "sleep", "1", "click", "1",
 			"sleep", "1",
 			"mousemove_relative", "--", "0", "-50",
 			"sleep", "1",
@@ -218,30 +236,21 @@ func TestClicking(t *testing.T) {
 		lvl++
 		msgs <- Action{
 			Type: "append-item",
-			Item: Item{
-				Title:   "appended",
-				Enabled: true,
-			},
+			Item: Item{Title: "appended", Enabled: true},
 		}
 		msgs <- Action{
-			Type: "update-item",
-			Item: Item{
-				Title:   "now with more items",
-				Enabled: true,
-			},
-			SeqID: 0,
+			Type: "update-item", SeqID: 0,
+			Item: Item{Title: "now with more items", Enabled: true},
 		}
 
 		xdt := exec.Command("xdotool",
+			// siigh... somehow the drawing is buggy sometimes
 			"mousemove", "0", "0", "click", "1",
-			"sleep", "1",
 			"mousemove", thx, thy, "click", "1",
 			"sleep", "1",
 			"mousemove", "0", "0", "click", "1",
 			"sleep", "1",
-			"mousemove", thx, thy,
-			"sleep", "1",
-			"click", "1",
+			"mousemove", thx, thy, "sleep", "1", "click", "1",
 			"sleep", "1",
 			"mousemove_relative", "--", "0", "-65",
 			"sleep", "1",
@@ -256,29 +265,21 @@ func TestClicking(t *testing.T) {
 		<-startLvl4
 		lvl++
 		msgs <- Action{
-			Type: "update-item",
-			Item: Item{
-				Title:   "cya..!",
-				Enabled: true,
-			},
-			SeqID: 0,
+			Type: "update-item", SeqID: 0,
+			Item: Item{Title: "cya..!", Enabled: true},
 		}
 		msgs <- Action{
-			Type: "update-item",
-			Item: Item{
-				Title:   "quit",
-				Enabled: true,
-			},
-			SeqID: 2,
+			Type: "update-item", SeqID: 2,
+			Item: Item{Title: "quit", Enabled: true},
 		}
 
 		xdt := exec.Command("xdotool",
-			"mousemove", thx, thy,
-			"sleep", "1",
-			"click", "1",
+			// activate twice to work around render bug...
+			"mousemove", thx, thy, "sleep", "1", "click", "1",
+			"mousemove", thx, thy, "sleep", "1", "click", "1",
+			"mousemove", thx, thy, "sleep", "1", "click", "1",
 			"sleep", "1",
 			"mousemove_relative", "--", "0", "-20",
-			"sleep", "1",
 			"click", "1")
 		out, err := xdt.CombinedOutput()
 		check(errors.Wrapf(err, "failed to click menu: %s", string(out)))
@@ -341,6 +342,7 @@ type Item struct {
 	Tooltip string `json:"tooltip"`
 	Enabled bool   `json:"enabled"`
 	Checked bool   `json:"checked"`
+	Hidden  bool   `json:"hidden"`
 }
 type Menu struct {
 	Icon    string `json:"icon"`
