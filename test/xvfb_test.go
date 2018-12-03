@@ -45,6 +45,8 @@ func TestClicking(t *testing.T) {
 		defer halt(xvfb)
 		disp = ":23"
 	}
+	//thx, thy := "793", "593"
+	thx, thy := "1675", "1045"
 
 	t.Logf("using DISPLAY: %s", disp)
 
@@ -125,8 +127,10 @@ func TestClicking(t *testing.T) {
 
 	thready := make(chan struct{})
 	startLvl1 := make(chan struct{})
-	startLevel2 := make(chan struct{})
-	var level1, level2 bool
+	startLvl2 := make(chan struct{})
+	startLvl3 := make(chan struct{})
+	startLvl4 := make(chan struct{})
+	lvl := 0
 	go func() {
 		dec := json.NewDecoder(stdout)
 		for {
@@ -136,24 +140,29 @@ func TestClicking(t *testing.T) {
 				break
 			}
 			check(errors.Wrap(err, "decode error from helper"))
-			fmt.Fprintf(logOut, "got stdout (c?:%v): %+v\n", level1, v)
+			fmt.Fprintf(logOut, "lvl:%d - %+v\n", lvl, v)
 
 			if v.Type == "ready" {
 				close(thready)
 				<-startLvl1
+				lvl++
 				continue
 			}
 
 			if v.Type == "clicked" {
 				// TODO: fix title
-				t.Logf("clicked %d: %s", v.SeqID, v.Item.Title)
+				t.Logf("lvl:%d - clicked %d: %s", lvl, v.SeqID, v.Item.Title)
 				switch {
-				case !level1 && v.SeqID == 1:
-					level1 = true
-					close(startLevel2)
-				case level1 && v.SeqID == 0:
-					level2 = true
+				case lvl == 1 && v.Item.Title == "these are a mirage right now":
+					close(startLvl2)
+				case lvl == 2 && v.Item.Title == "enabled":
+					close(startLvl3)
+				case lvl == 3 && v.SeqID == 0 && v.Item.Title == "now with more items":
+					close(startLvl4)
+				case lvl == 4 && v.SeqID == 2 && v.Item.Title == "quit":
 					stdin.Close()
+				default:
+					t.Log("unhandled case", lvl, v)
 				}
 			}
 		}
@@ -164,9 +173,7 @@ func TestClicking(t *testing.T) {
 		<-thready
 
 		xdt := exec.Command("xdotool",
-			"mousemove",
-			//"1675", "1045",
-			"793", "593",
+			"mousemove", thx, thy,
 			"sleep", "1",
 			"click", "1",
 			"sleep", "1",
@@ -181,20 +188,19 @@ func TestClicking(t *testing.T) {
 	}()
 
 	go func() { // level 2
-		<-startLevel2
+		<-startLvl2
+		lvl++
 		msgs <- Action{
 			Type: "update-item",
 			Item: Item{
-				Title:   "final",
+				Title:   "enabled",
 				Enabled: true,
 			},
 			SeqID: 0,
 		}
 
 		xdt := exec.Command("xdotool",
-			"mousemove",
-			//"1675", "1045",
-			"793", "593",
+			"mousemove", thx, thy,
 			"sleep", "1",
 			"click", "1",
 			"sleep", "1",
@@ -205,14 +211,85 @@ func TestClicking(t *testing.T) {
 		check(errors.Wrapf(err, "failed to click menu: %s", string(out)))
 
 		fmt.Fprintln(logOut, "level2 send")
+	}()
 
+	go func() { // level 3
+		<-startLvl3
+		lvl++
+		msgs <- Action{
+			Type: "append-item",
+			Item: Item{
+				Title:   "appended",
+				Enabled: true,
+			},
+		}
+		msgs <- Action{
+			Type: "update-item",
+			Item: Item{
+				Title:   "now with more items",
+				Enabled: true,
+			},
+			SeqID: 0,
+		}
+
+		xdt := exec.Command("xdotool",
+			"mousemove", "0", "0", "click", "1",
+			"sleep", "1",
+			"mousemove", thx, thy, "click", "1",
+			"sleep", "1",
+			"mousemove", "0", "0", "click", "1",
+			"sleep", "1",
+			"mousemove", thx, thy,
+			"sleep", "1",
+			"click", "1",
+			"sleep", "1",
+			"mousemove_relative", "--", "0", "-65",
+			"sleep", "1",
+			"click", "1")
+		out, err := xdt.CombinedOutput()
+		check(errors.Wrapf(err, "failed to click menu: %s", string(out)))
+
+		fmt.Fprintln(logOut, "level3 send")
+	}()
+
+	go func() { // level 4
+		<-startLvl4
+		lvl++
+		msgs <- Action{
+			Type: "update-item",
+			Item: Item{
+				Title:   "cya..!",
+				Enabled: true,
+			},
+			SeqID: 0,
+		}
+		msgs <- Action{
+			Type: "update-item",
+			Item: Item{
+				Title:   "quit",
+				Enabled: true,
+			},
+			SeqID: 2,
+		}
+
+		xdt := exec.Command("xdotool",
+			"mousemove", thx, thy,
+			"sleep", "1",
+			"click", "1",
+			"sleep", "1",
+			"mousemove_relative", "--", "0", "-20",
+			"sleep", "1",
+			"click", "1")
+		out, err := xdt.CombinedOutput()
+		check(errors.Wrapf(err, "failed to click menu: %s", string(out)))
+
+		fmt.Fprintln(logOut, "level4 send")
 	}()
 
 	fmt.Fprintln(logOut, "waiting for trayhelper")
 	err = th.Wait()
 	r.NoError(err)
-	r.True(level1)
-	r.True(level2)
+	r.Equal(4, lvl)
 
 	if _, ok := os.LookupEnv("TRAY_I3"); ok {
 		i3exit := exec.Command("i3-msg", "exit")
