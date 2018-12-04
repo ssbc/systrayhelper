@@ -11,8 +11,8 @@ if [[ $TRAVIS_OS_NAME == 'linux' ]]; then
     export PATH=$PATH:$(pwd)
   }
   export TRAY_I3=t
-  xvfb-run -e xvfb.err dbus-run-session go test -timeout 2m -v ./...
-  test -f xvfb.err && cat xvfb.err
+  xvfb-run -e /tmp/xvfb.err dbus-run-session go test -timeout 2m -v ./...
+  cat /tmp/xvfb.err || true
 else
   go test -v
 fi
