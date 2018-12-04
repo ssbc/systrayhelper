@@ -15,7 +15,7 @@ import (
 )
 
 var (
-	version = "v0.0.5"
+	version = "v0.0.6-snapshot"
 	commit  = "unset"
 	date    = "unset"
 )
