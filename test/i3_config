@@ -1,0 +1,9 @@
+set $mod Mod4
+
+font pango:monospace 8
+
+bindsym $mod+f fullscreen toggle
+
+bar {
+  status_command i3status
+}

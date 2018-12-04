@@ -4,14 +4,16 @@
     "tooltip": "Tips",
     "items": [
         {
-            "title": "welcome to the tests...!",
+            "title": "w",
+            "tooltip": "welcome to the tests...!",
             "checked": true,
             "enabled": false
         },
         {
-            "title": "entry two",
+            "title": "Not yet quit",
+            "tooltip": "q",
             "checked": false,
-            "enabled": false
+            "enabled": true
         }
     ]
 }
@@ -19,8 +21,13 @@
     "type": "update-item",
     "seq_id": 1,
     "item": {
-        "title": "check new title",
+        "title": "Quit",
+        "tooltip": "q",
         "checked": false,
         "enabled": true
     }
+}
+{
+    "type": "shutdown",
+    "seq_id": 999
 }

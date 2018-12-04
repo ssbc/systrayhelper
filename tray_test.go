@@ -12,7 +12,7 @@ import (
 // just so that it compiles and starts
 func TestStart(t *testing.T) {
 
-	testf, err := os.Open("test.json")
+	testf, err := os.Open("test_withshutdown.json")
 	if err != nil {
 		t.Fatal(err)
 	}

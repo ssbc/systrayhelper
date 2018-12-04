@@ -1,10 +1,20 @@
 #!/bin/bash
-
-if [[ $TRAVIS_OS_NAME == 'linux' ]]; then
-  export DISPLAY=':99.0'
-  Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
-  echo started xvfb
-fi
+set -e
 
 echo debug: $TRAVIS_OS_NAME $DISPLAY
-go test ./...
+
+if [[ $TRAVIS_OS_NAME == 'linux' ]]; then
+  # "integration testing is only supported on linux (using Xvfb and xdotool)"
+  export PATH=$PATH:$(pwd) # expose helper
+  command systrayhelper -v || {
+    go build -v -i
+    export PATH=$PATH:$(pwd)
+  }
+  export TRAY_I3=t
+  xvfb-run -e xvfb.err dbus-run-session go test -timeout 2m -v ./...
+  test -f xvfb.err && cat xvfb.err
+else
+  go test -v
+fi
+
+

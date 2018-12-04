@@ -2,12 +2,20 @@
 
 
 [[projects]]
+  digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
+  name = "github.com/davecgh/go-spew"
+  packages = ["spew"]
+  pruneopts = "UT"
+  revision = "8991bc29aa16c548c550c7ff78260e27b9ab7c73"
+  version = "v1.1.1"
+
+[[projects]]
   branch = "master"
-  digest = "1:54d414482fb70eaccdd6e6fca023986b16ab3004e5b499b6bc3667d89574fc07"
+  digest = "1:c3c09c0f941175181747b2d6948fd1add3ba82e66215aae78ec9b44d97d8ed40"
   name = "github.com/getlantern/context"
   packages = ["."]
   pruneopts = "UT"
-  revision = "624d99b1798d7c5375ea1d3ca4c5b04d58f7c775"
+  revision = "539649cc311886ee3604204cfab46f72b5f40950"
 
 [[projects]]
   branch = "master"
@@ -51,11 +59,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:9ea828b0087cf226e4589379359e114214dc218022bb4e96fe529e05531bfa35"
+  digest = "1:b23f80d517fc07d155277f03e49da71cf0497818a121c7ddff3f1dc77903f86f"
   name = "github.com/getlantern/systray"
   packages = ["."]
   pruneopts = "UT"
-  revision = "e31397f8c6928d98a8a9a7e80087aebcf0090beb"
+  revision = "6fa49abe8bee085d84e1d5aae1104c1ec88a97db"
 
 [[projects]]
   digest = "1:586ea76dbd0374d6fb649a91d70d652b7fe0ccffb8910a77468e7702e7901f3d"
@@ -82,12 +90,31 @@
   version = "v0.8.0"
 
 [[projects]]
+  digest = "1:0028cb19b2e4c3112225cd871870f2d9cf49b9b4276531f03438a88e94be86fe"
+  name = "github.com/pmezard/go-difflib"
+  packages = ["difflib"]
+  pruneopts = "UT"
+  revision = "792786c7400a136282c1664665ae0a8db921c6c2"
+  version = "v1.0.0"
+
+[[projects]]
+  digest = "1:c40d65817cdd41fac9aa7af8bed56927bb2d6d47e4fea566a74880f5c2b1c41e"
+  name = "github.com/stretchr/testify"
+  packages = [
+    "assert",
+    "require",
+  ]
+  pruneopts = "UT"
+  revision = "f35b8ab0b5a2cef36673838d662e249dd9c94686"
+  version = "v1.2.2"
+
+[[projects]]
   branch = "master"
   digest = "1:68a4638398cf8c864a6aa50c8853ebe7935f939aa3acf7e44cb35b67852e9fef"
   name = "golang.org/x/sys"
   packages = ["windows"]
   pruneopts = "UT"
-  revision = "8e24a49d80f82323e1c4db1b5da3e0f31171a151"
+  revision = "4ed8d59d0b35e1e29334a206d1b3f38b1e5dfb31"
 
 [solve-meta]
   analyzer-name = "dep"
@@ -95,6 +122,7 @@
   input-imports = [
     "github.com/getlantern/systray",
     "github.com/pkg/errors",
+    "github.com/stretchr/testify/require",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1
