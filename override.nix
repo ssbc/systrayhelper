@@ -5,7 +5,5 @@ systrayhelper.overrideDerivation (drv: {
   buildFlagsArray = [ ''-ldflags=
     -X main.version=snap
   '' ];
-  # use dep2nix to make this
-  #goDeps = ./deps.nix;
 })
 
